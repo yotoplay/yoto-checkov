@@ -7,6 +7,11 @@
 node_modules/
 dist/
 
+# Python artifact files
+__pycache__/
+venv/
+.pytest_cache/
+
 # Compiled Java class files
 *.class
 
@@ -47,4 +52,3 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
-
