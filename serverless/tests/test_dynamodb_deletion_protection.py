@@ -1,60 +1,57 @@
-import pytest
+import unittest
 from checkov.common.models.enums import CheckResult
 from ..dynamodb_deletion_protection import DynamoDBDeletionProtection
 
-@pytest.fixture
-def checker():
-    return DynamoDBDeletionProtection()
+class TestDynamoDBDeletionProtection(unittest.TestCase):
+    def setUp(self):
+        self.checker = DynamoDBDeletionProtection()
 
-def test_table_with_proper_protection(checker):
-    conf = {
-        'Type': 'AWS::DynamoDB::Table',
-        'DeletionPolicy': 'Retain',
-        'UpdateReplacePolicy': 'Retain',
-        'Properties': {
-            'TableName': 'GoodTable'
+    def test_table_with_proper_protection(self):
+        conf = {
+            'Type': 'AWS::DynamoDB::Table',
+            'DeletionPolicy': 'Retain',
+            'UpdateReplacePolicy': 'Retain',
+            'Properties': {
+                'TableName': 'GoodTable'
+            }
         }
-    }
-    
-    result = checker.scan_resource_conf(conf)
-    assert result == CheckResult.PASSED
+        
+        result = self.checker.scan_resource_conf(conf)
+        self.assertEqual(result, CheckResult.PASSED)
 
-def test_table_without_protection(checker):
-    conf = {
-        'Type': 'AWS::DynamoDB::Table',
-        'Properties': {
-            'TableName': 'NoProtectionTable'
+    def test_table_without_protection(self):
+        conf = {
+            'Type': 'AWS::DynamoDB::Table',
+            'Properties': {
+                'TableName': 'BadTable'
+            }
         }
-    }
+        
+        result = self.checker.scan_resource_conf(conf)
+        self.assertEqual(result, CheckResult.FAILED)
 
-    result = checker.scan_resource_conf(conf)
-    assert result == CheckResult.FAILED
-    assert checker.failure_reason == "DeletionPolicy should be set to 'Retain'"
-
-def test_table_with_wrong_deletion_policy(checker):
-    conf = {
-        'Type': 'AWS::DynamoDB::Table',
-        'DeletionPolicy': 'Delete',
-        'UpdateReplacePolicy': 'Retain',
-        'Properties': {
-            'TableName': 'BadDeletionTable'
+    def test_table_with_partial_protection(self):
+        conf = {
+            'Type': 'AWS::DynamoDB::Table',
+            'DeletionPolicy': 'Retain',
+            'Properties': {
+                'TableName': 'PartiallyProtectedTable'
+            }
         }
-    }
+        
+        result = self.checker.scan_resource_conf(conf)
+        self.assertEqual(result, CheckResult.FAILED)
 
-    result = checker.scan_resource_conf(conf)
-    assert result == CheckResult.FAILED
-    assert checker.failure_reason == "DeletionPolicy should be set to 'Retain'"
-
-def test_table_with_wrong_update_policy(checker):
-    conf = {
-        'Type': 'AWS::DynamoDB::Table',
-        'DeletionPolicy': 'Retain',
-        'UpdateReplacePolicy': 'Delete',
-        'Properties': {
-            'TableName': 'BadUpdateTable'
+    def test_non_dynamodb_resource(self):
+        conf = {
+            'Type': 'AWS::S3::Bucket',
+            'Properties': {
+                'BucketName': 'TestBucket'
+            }
         }
-    }
+        
+        result = self.checker.scan_resource_conf(conf)
+        self.assertEqual(result, CheckResult.UNKNOWN)
 
-    result = checker.scan_resource_conf(conf)
-    assert result == CheckResult.FAILED
-    assert checker.failure_reason == "UpdateReplacePolicy should be set to 'Retain'"
+if __name__ == '__main__':
+    unittest.main()

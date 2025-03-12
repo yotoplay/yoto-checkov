@@ -12,4 +12,4 @@ pipelines:
           - apt-get install -y rustc cargo
           # install python dependencies
           - pip install -r requirements.txt
-          - pytest
+          - python -m unittest discover

@@ -10,21 +10,17 @@ class DynamoDBDeletionProtection(BaseResourceCheck):
         super().__init__(name=name, id=id, categories=categories, supported_resources=supported_resources)
 
     def scan_resource_conf(self, conf):
-        print(f"Scanning resource: {conf}")  # Debug print
-        deletion_policy = conf.get('DeletionPolicy')
-        update_policy = conf.get('UpdateReplacePolicy')
+        print(f"Scanning resource: {conf}")
         
-        if deletion_policy == 'Retain' and update_policy == 'Retain':
+        if conf.get('Type') != 'AWS::DynamoDB::Table':
+            return CheckResult.UNKNOWN
+        
+        has_deletion_policy = conf.get('DeletionPolicy') == 'Retain'
+        has_update_policy = conf.get('UpdateReplacePolicy') == 'Retain'
+        
+        if has_deletion_policy and has_update_policy:
             return CheckResult.PASSED
         
-        if deletion_policy != 'Retain':
-            self.failure_reason = "DeletionPolicy should be set to 'Retain'"
-            return CheckResult.FAILED
-        
-        if update_policy != 'Retain':
-            self.failure_reason = "UpdateReplacePolicy should be set to 'Retain'"
-            return CheckResult.FAILED
-            
-        return CheckResult.UNKNOWN
+        return CheckResult.FAILED
 
 check = DynamoDBDeletionProtection()
