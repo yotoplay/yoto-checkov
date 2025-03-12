@@ -1,6 +1,6 @@
 import pytest
 from checkov.common.models.enums import CheckResult
-from ..dynamodb_deletion_protection import DynamoDBDeletionProtection
+from serverless.dynamodb_deletion_protection import DynamoDBDeletionProtection
 
 @pytest.fixture
 def checker():
