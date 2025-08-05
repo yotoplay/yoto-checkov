@@ -10,7 +10,6 @@ class DynamoDBDeletionProtection(BaseResourceCheck):
         super().__init__(name=name, id=id, categories=categories, supported_resources=supported_resources)
 
     def scan_resource_conf(self, conf):
-        print(f"Scanning resource: {conf}")  # Debug print
         deletion_policy = conf.get('DeletionPolicy')
         update_policy = conf.get('UpdateReplacePolicy')
         
