@@ -4,7 +4,7 @@ A publicly available collection of checkov tests used for AWS and the Serverless
 
 ## Run tests
 
-```
+```shell
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
