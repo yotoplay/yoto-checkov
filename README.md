@@ -10,3 +10,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 pytest
 ```
+
+## Release
+
+- Make your changes
+- Commit using conventional commit messages
+- Run the below command to create a new release (form a semver'd git tag)
+
+```shell
+semantic-release version --no-vcs-release
+```
