@@ -22,5 +22,4 @@ upload_to_pypi = false
 upload_to_release = true
 build_command = "pytest"
 changelog_file = "CHANGELOG.md"
-remote_token_env = "BITBUCKET_TOKEN"
 repository = "git@bitbucket.org:yotoplay/yoto-checkov.git" 
