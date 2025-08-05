@@ -1,2 +1,1 @@
 checkov>=3.2.457
-pytest>=8.4.1
