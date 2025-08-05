@@ -19,4 +19,8 @@ version_variable = [
 ]
 build_command = "pytest"
 changelog_file = "CHANGELOG.md"
-upload_to_vcs_release = false 
+upload_to_vcs_release = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"] 
