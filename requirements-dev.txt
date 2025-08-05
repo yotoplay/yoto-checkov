@@ -1,3 +1,0 @@
-checkov>=3.2.457
-pytest>=8.4.1
-python-semantic-release>=10.3.0 
