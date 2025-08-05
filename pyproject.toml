@@ -17,10 +17,6 @@ dependencies = [
 version_variable = [
     "pyproject.toml:project.version"
 ]
-dist_path = "dist/"
-upload_to_pypi = false
-upload_to_release = false
 build_command = "pytest"
 changelog_file = "CHANGELOG.md"
-repository = "git@bitbucket.org:yotoplay/yoto-checkov.git"
-upload_to_vcs = false 
+upload_to_vcs_release = false 
