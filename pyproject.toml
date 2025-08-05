@@ -22,4 +22,5 @@ upload_to_pypi = false
 upload_to_release = false
 build_command = "pytest"
 changelog_file = "CHANGELOG.md"
-repository = "git@bitbucket.org:yotoplay/yoto-checkov.git" 
+repository = "git@bitbucket.org:yotoplay/yoto-checkov.git"
+upload_to_vcs = false 
