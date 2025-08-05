@@ -8,10 +8,6 @@ version = "1.0.0"
 description = "A publicly available collection of checkov tests used for AWS and the Serverless framework"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [
-    "checkov>=3.2.457",
-    "pytest>=8.4.1",
-]
 
 [tool.semantic_release]
 version_variable = [
