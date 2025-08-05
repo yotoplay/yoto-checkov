@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yoto-checkov"
+version = "1.0.0"
+description = "A publicly available collection of checkov tests used for AWS and the Serverless framework"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "checkov>=3.2.457",
+    "pytest>=8.4.1",
+]
+
+[tool.semantic_release]
+version_variable = [
+    "pyproject.toml:project.version"
+]
+dist_path = "dist/"
+upload_to_pypi = false
+upload_to_release = true
+build_command = "pytest"
+changelog_file = "CHANGELOG.md"
+remote_token_env = "BITBUCKET_TOKEN"
+repository = "git@bitbucket.org:yotoplay/yoto-checkov.git" 
