@@ -3,19 +3,17 @@ from checkov.cloudformation.checks.resource.base_resource_check import BaseResou
 
 class CloudWatchLogRetention(BaseResourceCheck):
     def __init__(self):
-        name = "Ensure CloudWatch logs are retained for 30 days or less (to comply with deletion request periods)"
+        name = "Ensure CloudWatch logs are retained for 30 days or less (to comply with deletion request periods, and reduce unnecessary costs)"
         id = "CKV_CUSTOM_CLOUDWATCH_LOG_RETENTION"
         supported_resources = ['AWS::Logs::LogGroup']
         categories = [CheckCategories.BACKUP_AND_RECOVERY]
         super().__init__(name=name, id=id, categories=categories, supported_resources=supported_resources)
 
+    def _get_retention_days(self, conf):
+        return conf.get('RetentionInDays') or conf.get('Properties', {}).get('RetentionInDays')
+
     def scan_resource_conf(self, conf):
-        # Check if RetentionInDays is at the root level
-        retention_in_days = conf.get('RetentionInDays')
-        
-        # If not at root, check in Properties
-        if retention_in_days is None and 'Properties' in conf:
-            retention_in_days = conf['Properties'].get('RetentionInDays')
+        retention_in_days = self._get_retention_days(conf)
         
         if retention_in_days is None:
             self.failure_reason = "RetentionInDays should be set to 30 days or less"
