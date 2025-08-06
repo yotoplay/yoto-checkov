@@ -1,6 +1,6 @@
 # yoto-checkov
 
-A publicly available collection of checkov tests used for AWS and the Serverless framework.
+A publicly available collection of checkov tests used checking AWS resources created by Serverless.
 
 ## How To
 
@@ -19,6 +19,12 @@ pip install -r requirements.txt
 pytest
 ```
 
+### Run The Checks Locally
+
+```shell
+checkov -d ../yoto-fulfillment-api --external-checks-dir ./serverless --framework serverless
+```
+
 ### Upgrade Dependencies
 
 ```shell
@@ -32,6 +38,11 @@ pip install --upgrade -r requirements.txt
 - Once pushed, semantic release versions releases using git tags
 
 ## Reference
+
+### Limitations
+
+- `checkov` scans the serverless.yml and builds an object tree for all the resources that the serverless.yml would create
+- It is not able to look at global settings. For example `provider:logRetentionInDays` as 'provider' is not an AWS resource. Instead it will scan over all 'functions' defined in the serverless.yml. This means checking any global settings is not possible.
 
 ### Structure
 
