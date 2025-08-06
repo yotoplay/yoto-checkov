@@ -6,7 +6,7 @@ class CloudWatchLogRetention(BaseResourceCheck):
         name = "Ensure CloudWatch logs are retained for 30 days or less (to comply with deletion request periods, and reduce unnecessary costs)"
         id = "CKV_CUSTOM_CLOUDWATCH_LOG_RETENTION"
         supported_resources = ['AWS::Logs::LogGroup']
-        categories = [CheckCategories.BACKUP_AND_RECOVERY]
+        categories = [CheckCategories.LOGGING]
         super().__init__(name=name, id=id, categories=categories, supported_resources=supported_resources)
 
     def _get_retention_days(self, conf):
