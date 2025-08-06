@@ -41,4 +41,4 @@ pip install --upgrade -r requirements.txt
 ### The Custom Checks
 
 - `dynamodb_deletion_protection` - to ensure _all_ tables have deletion protection enabled (it needs to be explicitly set in serverless) after an incident where serverless deleted a table during deploy.
-- `cloudwatch_log_retention` - to avoid storing logs forever (costs) and deletion requests periods (30 days to action a deletion request of all PII for a user). If logs were kept longer than 30 days would have to find and remove any logs associated to the deletion request which is difficult and time consuming.
+- `cloudwatch_log_retention` - to avoid storing logs forever (costs) and deletion requests periods (30 days to action a deletion request of all PII for a user). If logs were kept longer than 30 days it would mean finding and removing any logs associated to the deletion request - which is difficult and time consuming.

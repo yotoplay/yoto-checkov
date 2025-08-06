@@ -7,7 +7,7 @@ name = "yoto-checkov"
 version = "1.0.0"
 description = "A publicly available collection of checkov tests used for AWS and the Serverless framework"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
 [tool.semantic_release]
 version_variable = [
