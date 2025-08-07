@@ -4,6 +4,16 @@ A publicly available collection of checkov tests used checking AWS resources cre
 
 ## How To
 
+### Consume A Specific Version
+
+In your `checkov.yml` specify the git tag you want to run against:
+
+```yaml
+external-checks-git:
+  - https://bitbucket.org/yotoplay/yoto-checkov.git//serverless?ref=<semver>
+  - https://bitbucket.org/yotoplay/yoto-checkov.git//serverless?ref=v1.2.0
+```
+
 ### Get Set Up
 
 ```shell
