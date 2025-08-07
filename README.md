@@ -19,11 +19,18 @@ pip install -r requirements.txt
 pytest
 ```
 
-### Run The Checks Locally
+### Develop Checks Locally
+
+1. Run the checks locally against another repo, like this:
 
 ```shell
 checkov -d ../yoto-fulfillment-api --external-checks-dir ./serverless --framework serverless
 ```
+
+2. Amend the serverless config in repo in question to prove your check fails
+3. Remember to key aspects of checkov:
+   - it interprets serverless.yml as Cloudformation resources (but does not actually generate Cloudformation)
+   - it can only work at the resource level (i.e. functions). You cannot check anything at a global level (like under the `provider:` section)
 
 ### Upgrade Dependencies
 

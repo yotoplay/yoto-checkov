@@ -14,7 +14,7 @@ class CloudWatchLogRetention(BaseResourceCheck):
 
     def scan_resource_conf(self, conf):
         retention_in_days = self._get_retention_days(conf)
-        
+            
         if retention_in_days is None:
             self.failure_reason = "RetentionInDays should be set to 30 days or less"
             return CheckResult.FAILED
