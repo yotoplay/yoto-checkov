@@ -1,6 +1,6 @@
 # yoto-checkov
 
-A publicly available collection of checkov tests used checking AWS resources created by Serverless.
+A publicly available collection of checkov tests used checking AWS resources created by Serverless. Used to extend the suite of checkov tests we run in CI as part of validating our cloud configuration.
 
 ## How To
 
