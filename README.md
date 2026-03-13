@@ -10,8 +10,8 @@ In your `checkov.yml` specify the git tag you want to run against:
 
 ```yaml
 external-checks-git:
-  - https://bitbucket.org/yotoplay/yoto-checkov.git//serverless?ref=<semver>
-  - https://bitbucket.org/yotoplay/yoto-checkov.git//serverless?ref=v1.2.0
+  - https://github.com/yotoplay/yoto-checkov.git//serverless?ref=<semver>
+  - https://github.com/yotoplay/yoto-checkov.git//serverless?ref=v1.2.0
 ```
 
 ### Get Set Up
