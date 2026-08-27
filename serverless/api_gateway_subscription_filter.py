@@ -34,9 +34,11 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
             self.failure_reason = "FilterName should start with 'S3-api-gateway-logs-'"
             return CheckResult.FAILED
         
-        # Check DestinationArn points to Firehose
+        # Check DestinationArn points to Firehose. Compared case-insensitively as
+        # serverless `${param:...}` variables are not resolved by checkov and are
+        # left as literal strings (e.g. '${param:apiLogsFirehoseStreamArn}').
         destination_arn = self._get_property(conf, 'DestinationArn')
-        if not destination_arn or 'ApiLogsFirehoseStreamArn' not in str(destination_arn):
+        if not destination_arn or 'apilogsfirehosestreamarn' not in str(destination_arn).lower():
             self.failure_reason = "DestinationArn should reference ApiLogsFirehoseStreamArn"
             return CheckResult.FAILED
         

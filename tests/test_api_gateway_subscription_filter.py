@@ -46,6 +46,26 @@ def test_valid_rest_api_subscription_filter(checker):
     assert result == CheckResult.PASSED
 
 
+def test_valid_subscription_filter_with_unresolved_param_variable(checker):
+    """DestinationArn using an unresolved `${param:...}` serverless variable
+    (checkov does not resolve `param:` references) should still pass, matched
+    case-insensitively against the expected firehose stream reference."""
+    conf = {
+        'Type': 'AWS::Logs::SubscriptionFilter',
+        'Properties': {
+            'LogGroupName': '/aws/api-gateway/my-service-prod',
+            'FilterName': 'S3-api-gateway-logs-my-service-prod',
+            'FilterPattern': '',
+            'DestinationArn': '${param:apiLogsFirehoseStreamArn}',
+            'RoleArn': '!GetAtt CloudWatchLogsToFirehoseRole.Arn',
+            'Distribution': 'Random'
+        }
+    }
+
+    result = checker.scan_resource_conf(conf)
+    assert result == CheckResult.PASSED
+
+
 def test_properties_at_root_level(checker):
     """Properties at root level (not nested) should also be checked."""
     conf = {
