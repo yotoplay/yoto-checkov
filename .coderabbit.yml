@@ -1,0 +1,48 @@
+language: "en-GB"
+
+tone_instructions: "Be specific and actionable. Explain the why behind suggestions. Prioritise by severity: critical, important, suggestion. Label uncertain points as questions. Do not suggest changes based on personal preference."
+
+reviews:
+  profile: "chill"
+  poem: false
+  high_level_summary: false
+  in_progress_fortune: false
+  sequence_diagrams: false
+  auto_review:
+    enabled: true
+    drafts: true
+    auto_pause_after_reviewed_commits: 3 # pause auto-review after 3 commits; trigger manually to resume
+    labels: ["!skip-review"] # add this label to opt a PR out of auto-review, e.g. for trivial changes
+  path_filters:
+    - "!**/*.md"
+    - "!CODEOWNERS"
+    - "!.githooks/**"
+    - "!.zed/**"
+    - "!.vscode/**"
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        Focus only on issues supported by the code or established project conventions.
+        Assume existing code is correct unless there is evidence otherwise.
+        Do not recommend changes based solely on personal preference.
+
+        Identify:
+        - Bugs
+        - Security vulnerabilities
+        - Performance bottlenecks or inefficient algorithms
+        - Maintainability concerns
+        - Missing or weak tests
+
+        Code quality checks:
+        - Verify the implementation follows existing project conventions and patterns (naming, immutability, testing)
+        - Verify that behaviour changes are covered by appropriate tests
+        - Check that test descriptions are concise and definitive
+        - Ensure tests avoid fixed values and use randomised data where appropriate
+
+        Adversarial checks (in addition to the above, on every review):
+        - Actively look for reasons this change should NOT be merged, not just confirmation that it looks fine
+        - Race conditions and concurrency hazards (shared state, ordering assumptions, non-atomic read-modify-write)
+        - Incomplete or swallowed error handling, including unhandled promise rejections and partial rollback on failure
+        - Gaps between the stated requirement/spec and what the code actually does, including unhandled edge cases
+        - Recurrence of bug patterns already fixed elsewhere in this codebase (check for the same mistake reappearing in new code)
+        - Departures from existing patterns and conventions elsewhere in the codebase, even where the new code is individually correct — consistency with established conventions takes priority over a locally "better" approach
