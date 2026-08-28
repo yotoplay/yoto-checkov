@@ -6,13 +6,19 @@ A publicly available collection of checkov tests used checking AWS resources cre
 
 ### Consume A Specific Version
 
-In your `checkov.yml` specify the git tag you want to run against:
+In your `checkov.yml` specify the git tag you want to run against. **Always pin a version** -
+do not omit `?ref=` and track the default branch. This keeps upgrades deliberate (new/tightened
+checks won't break your pipeline unannounced) and limits the blast radius of this repo being
+cloned and executed as code across many of our services:
 
 ```yaml
 external-checks-git:
   - https://github.com/yotoplay/yoto-checkov.git//serverless?ref=<semver>
   - https://github.com/yotoplay/yoto-checkov.git//serverless?ref=v1.2.0
 ```
+
+See [UPGRADING.md](./UPGRADING.md) before bumping your pinned version, especially for the
+migration from Bitbucket to GitHub.
 
 ### Get Set Up
 
@@ -68,5 +74,6 @@ pip install --upgrade -r requirements.txt
 
 ### The Custom Checks
 
-- `CKV_CUSTOM_DYNAMODB_DELETION_PROTECTION` (`dynamodb_deletion_protection`) - to ensure _all_ tables have deletion protection enabled (it needs to be explicitly set in serverless) after an incident where serverless deleted a table during deploy.
+- `CKV_CUSTOM_DYNAMODB_DELETION_PROTECTION` (`dynamodb_deletion_protection`) - to ensure _all_ tables have deletion protection enabled (`Properties.DeletionProtectionEnabled: true`) and the CloudFormation `DeletionPolicy`/`UpdateReplacePolicy` are set to `Retain` (or a serverless variable that checkov cannot resolve, e.g. a per-stage `${self:...}` value) after an incident where serverless deleted a table during deploy.
 - `CKV_CUSTOM_CLOUDWATCH_LOG_RETENTION` (`cloudwatch_log_retention`) - to avoid storing logs forever (costs) and deletion requests periods (30 days to action a deletion request of all PII for a user). If logs were kept longer than 30 days it would mean finding and removing any logs associated to the deletion request - which is difficult and time consuming.
+- `CKV_CUSTOM_API_GATEWAY_SUBSCRIPTION_FILTER` (`api_gateway_subscription_filter`) - to ensure API Gateway CloudWatch log groups have a `SubscriptionFilter` correctly configured to export logs to S3 via Firehose (`FilterName` prefix, `DestinationArn` referencing the Firehose stream, `RoleArn` set, and `Distribution: Random`).
