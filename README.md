@@ -6,13 +6,19 @@ A publicly available collection of checkov tests used checking AWS resources cre
 
 ### Consume A Specific Version
 
-In your `checkov.yml` specify the git tag you want to run against:
+In your `checkov.yml` specify the git tag you want to run against. **Always pin a version** -
+do not omit `?ref=` and track the default branch. This keeps upgrades deliberate (new/tightened
+checks won't break your pipeline unannounced) and limits the blast radius of this repo being
+cloned and executed as code across many of our services:
 
 ```yaml
 external-checks-git:
   - https://github.com/yotoplay/yoto-checkov.git//serverless?ref=<semver>
   - https://github.com/yotoplay/yoto-checkov.git//serverless?ref=v1.2.0
 ```
+
+See [UPGRADING.md](./UPGRADING.md) before bumping your pinned version, especially for the
+migration from Bitbucket to GitHub.
 
 ### Get Set Up
 
