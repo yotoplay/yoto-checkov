@@ -1,5 +1,24 @@
+from functools import lru_cache
+
 from checkov.common.models.enums import CheckResult, CheckCategories
 from checkov.cloudformation.checks.resource.base_resource_check import BaseResourceCheck
+from checkov.serverless.parsers.parser import parse
+
+
+@lru_cache(maxsize=None)
+def _template_resources(file_path):
+    """Return the CloudFormation resources declared in a serverless file, keyed by logical ID.
+
+    Parsed once per file, as a template usually has several subscription filters.
+    """
+    try:
+        parsed = parse(file_path)
+    except Exception:
+        return {}
+    if not parsed:
+        return {}
+    resources = (parsed[0].get('resources') or {}).get('Resources')
+    return resources if isinstance(resources, dict) else {}
 
 
 class ApiGatewaySubscriptionFilter(BaseResourceCheck):
@@ -18,8 +37,8 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
         """Return the string a property resolves to, or None when it can't be read statically.
 
         Plain strings (including unresolved serverless `${...}` variables) are returned as is,
-        and `!Sub` templates are returned as their template string. Other intrinsic functions,
-        such as `!Ref` to a log group resource, can't be resolved by a resource-level check.
+        and `!Sub` templates are returned as their template string. Other intrinsic functions
+        return None.
         """
         if isinstance(value, str):
             return value
@@ -31,6 +50,24 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
                 return template
         return None
 
+    def _resolve_log_group_name(self, conf, value):
+        """Return the log group name, following a `!Ref` to an `AWS::Logs::LogGroup` in the same file.
+
+        checkov records the source file on each resource as `__file__`, so the referenced
+        log group can be looked up there. Returns None when the name can't be determined,
+        e.g. the referenced log group has no explicit `LogGroupName`.
+        """
+        if isinstance(value, dict) and 'Ref' in value:
+            logical_id = value['Ref']
+            file_path = conf.get('__file__') or conf.get('Properties', {}).get('__file__')
+            if not isinstance(logical_id, str) or not isinstance(file_path, str):
+                return None
+            log_group = _template_resources(file_path).get(logical_id)
+            if not isinstance(log_group, dict) or log_group.get('Type') != 'AWS::Logs::LogGroup':
+                return None
+            return self._as_string(self._get_property(log_group, 'LogGroupName'))
+        return self._as_string(value)
+
     def _is_api_gateway_log_group(self, log_group_name):
         """Check if this SubscriptionFilter is for an API Gateway log group."""
         if log_group_name is None:
@@ -39,9 +76,9 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
         return log_group_name.startswith('/aws/http-api/') or log_group_name.startswith('/aws/api-gateway/')
 
     def scan_resource_conf(self, conf):
-        # A LogGroupName that can't be resolved (e.g. `!Ref MyLogGroup`) is treated
-        # as not being an API Gateway log group, rather than crashing the check.
-        log_group_name = self._as_string(self._get_property(conf, 'LogGroupName'))
+        # A `!Ref` is followed to the log group it points at. A LogGroupName that still
+        # can't be resolved is treated as not being an API Gateway log group.
+        log_group_name = self._resolve_log_group_name(conf, self._get_property(conf, 'LogGroupName'))
 
         # Only check SubscriptionFilters for API Gateway log groups
         if not self._is_api_gateway_log_group(log_group_name):
