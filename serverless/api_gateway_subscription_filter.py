@@ -36,17 +36,25 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
     def _as_string(self, value):
         """Return the string a property resolves to, or None when it can't be read statically.
 
-        Plain strings (including unresolved serverless `${...}` variables) are returned as is,
-        and `!Sub` templates are returned as their template string. Other intrinsic functions
-        return None.
+        Plain strings (including unresolved serverless `${...}` variables) are returned as is.
+        `!Sub` templates are returned as their template string, with any literal string values
+        from the list form's variable map substituted in, as CloudFormation would. Other
+        placeholders (e.g. `${AWS::Region}`) are left in place, as the checks only compare
+        prefixes. Other intrinsic functions return None.
         """
         if isinstance(value, str):
             return value
         if isinstance(value, dict) and 'Fn::Sub' in value:
             template = value['Fn::Sub']
+            variables = {}
             if isinstance(template, list) and template:
+                if len(template) > 1 and isinstance(template[1], dict):
+                    variables = template[1]
                 template = template[0]
             if isinstance(template, str):
+                for name, replacement in variables.items():
+                    if isinstance(name, str) and isinstance(replacement, str) and not name.startswith('__'):
+                        template = template.replace('${' + name + '}', replacement)
                 return template
         return None
 

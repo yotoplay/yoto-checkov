@@ -386,3 +386,46 @@ def test_unresolvable_filter_name_fails(checker):
     result = checker.scan_resource_conf(conf)
     assert result == CheckResult.FAILED
     assert "FilterName should start with 'S3-api-gateway-logs-'" in checker.failure_reason
+
+
+def sub_map_subscription_filter(log_group_prefix, filter_name_prefix):
+    """A SubscriptionFilter whose LogGroupName and FilterName prefixes come from list-form `!Sub` maps."""
+    return {
+        'Type': 'AWS::Logs::SubscriptionFilter',
+        'Properties': {
+            'LogGroupName': {'Fn::Sub': ['${Prefix}my-service-prod', {'Prefix': log_group_prefix}]},
+            'FilterName': {'Fn::Sub': ['${Prefix}my-service-${AWS::Region}', {'Prefix': filter_name_prefix}]},
+            'FilterPattern': '',
+            'DestinationArn': '${cf:YotoInfrastructureKinesis-prod.ApiLogsFirehoseStreamArn}',
+            'RoleArn': '!GetAtt CloudWatchLogsToFirehoseRole.Arn',
+            'Distribution': 'Random'
+        }
+    }
+
+
+def test_sub_map_prefixes_are_substituted(checker):
+    """Prefixes supplied through a list-form `!Sub` map are substituted before checking."""
+    result = checker.scan_resource_conf(sub_map_subscription_filter('/aws/http-api/', 'S3-api-gateway-logs-'))
+    assert result == CheckResult.PASSED
+
+
+def test_sub_map_filter_name_with_wrong_prefix_fails(checker):
+    """A wrong FilterName prefix supplied through a `!Sub` map fails."""
+    result = checker.scan_resource_conf(sub_map_subscription_filter('/aws/api-gateway/', 'wrong-prefix-'))
+    assert result == CheckResult.FAILED
+    assert "FilterName should start with 'S3-api-gateway-logs-'" in checker.failure_reason
+
+
+def test_sub_map_non_api_gateway_log_group_returns_unknown(checker):
+    """A non-API Gateway log group prefix supplied through a `!Sub` map returns UNKNOWN."""
+    result = checker.scan_resource_conf(sub_map_subscription_filter('/aws/lambda/', 'S3-api-gateway-logs-'))
+    assert result == CheckResult.UNKNOWN
+
+
+def test_sub_map_non_string_value_is_not_substituted(checker):
+    """A map value that isn't a literal string (e.g. a `!Ref`) is left as a placeholder, so the prefix can't match."""
+    conf = sub_map_subscription_filter('/aws/http-api/', 'S3-api-gateway-logs-')
+    conf['Properties']['LogGroupName'] = {'Fn::Sub': ['${Prefix}my-service-prod', {'Prefix': {'Ref': 'SomePrefix'}}]}
+
+    result = checker.scan_resource_conf(conf)
+    assert result == CheckResult.UNKNOWN
