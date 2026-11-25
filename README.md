@@ -71,6 +71,7 @@ pip install --upgrade -r requirements.txt
 
 - The `./serverless` folder is used to store all serverless checks (used so consumer can load just the folders that want)
 - Tests kept _outside_ of the `./serverless` folder otherwise `checkov` tries to read them (and errors as it doesn't know `pytest`)
+- End-to-end tests (`tests/*_e2e.py`) run checkov's serverless runner with the checks in `./serverless` against fixture `serverless.yml` files in `tests/fixtures`, the same way consumers' CI does
 
 ### The Custom Checks
 
