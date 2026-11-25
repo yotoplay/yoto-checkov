@@ -237,3 +237,74 @@ def test_wrong_distribution_value(checker):
     assert result == CheckResult.FAILED
     assert "Distribution should be set to 'Random'" in checker.failure_reason
 
+
+
+# --- INTRINSIC FUNCTION CASES ---
+
+def test_ref_log_group_name_returns_unknown(checker):
+    """A `!Ref` LogGroupName can't be resolved by a resource-level check, so it returns UNKNOWN instead of crashing."""
+    conf = {
+        'Type': 'AWS::Logs::SubscriptionFilter',
+        'Properties': {
+            'LogGroupName': {'Ref': 'SearchSlowLogGroup'},
+            'FilterPattern': '',
+            'DestinationArn': 'arn:aws:lambda:eu-west-2:123456789012:function:datadog-forwarder'
+        }
+    }
+
+    result = checker.scan_resource_conf(conf)
+    assert result == CheckResult.UNKNOWN
+
+
+def test_sub_log_group_name_for_api_gateway_is_checked(checker):
+    """A `!Sub` LogGroupName for an API Gateway log group is checked like a plain string."""
+    conf = {
+        'Type': 'AWS::Logs::SubscriptionFilter',
+        'Properties': {
+            'LogGroupName': {'Fn::Sub': '/aws/http-api/my-service-${AWS::Region}'},
+            'FilterName': {'Fn::Sub': 'S3-api-gateway-logs-my-service-${AWS::Region}'},
+            'FilterPattern': '',
+            'DestinationArn': '${cf:YotoInfrastructureKinesis-prod.ApiLogsFirehoseStreamArn}',
+            'RoleArn': '!GetAtt CloudWatchLogsToFirehoseRole.Arn',
+            'Distribution': 'Random'
+        }
+    }
+
+    result = checker.scan_resource_conf(conf)
+    assert result == CheckResult.PASSED
+
+
+def test_sub_list_log_group_name_for_api_gateway_is_checked(checker):
+    """The list form of `!Sub` is checked using its template string."""
+    conf = {
+        'Type': 'AWS::Logs::SubscriptionFilter',
+        'Properties': {
+            'LogGroupName': {'Fn::Sub': ['/aws/api-gateway/${Name}', {'Name': 'my-service'}]},
+            'FilterName': 'wrong-prefix-my-service-prod',
+            'DestinationArn': '${cf:YotoInfrastructureKinesis-prod.ApiLogsFirehoseStreamArn}',
+            'RoleArn': '!GetAtt CloudWatchLogsToFirehoseRole.Arn',
+            'Distribution': 'Random'
+        }
+    }
+
+    result = checker.scan_resource_conf(conf)
+    assert result == CheckResult.FAILED
+    assert "FilterName should start with 'S3-api-gateway-logs-'" in checker.failure_reason
+
+
+def test_unresolvable_filter_name_fails(checker):
+    """A FilterName built with an intrinsic that can't be resolved fails instead of crashing."""
+    conf = {
+        'Type': 'AWS::Logs::SubscriptionFilter',
+        'Properties': {
+            'LogGroupName': '/aws/http-api/my-service-prod',
+            'FilterName': {'Fn::Join': ['-', ['S3-api-gateway-logs', 'my-service']]},
+            'DestinationArn': '${cf:YotoInfrastructureKinesis-prod.ApiLogsFirehoseStreamArn}',
+            'RoleArn': '!GetAtt CloudWatchLogsToFirehoseRole.Arn',
+            'Distribution': 'Random'
+        }
+    }
+
+    result = checker.scan_resource_conf(conf)
+    assert result == CheckResult.FAILED
+    assert "FilterName should start with 'S3-api-gateway-logs-'" in checker.failure_reason

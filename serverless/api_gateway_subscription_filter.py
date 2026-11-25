@@ -14,6 +14,23 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
         """Get a property from either root level or nested Properties."""
         return conf.get(prop_name) or conf.get('Properties', {}).get(prop_name)
 
+    def _as_string(self, value):
+        """Return the string a property resolves to, or None when it can't be read statically.
+
+        Plain strings (including unresolved serverless `${...}` variables) are returned as is,
+        and `!Sub` templates are returned as their template string. Other intrinsic functions,
+        such as `!Ref` to a log group resource, can't be resolved by a resource-level check.
+        """
+        if isinstance(value, str):
+            return value
+        if isinstance(value, dict) and 'Fn::Sub' in value:
+            template = value['Fn::Sub']
+            if isinstance(template, list) and template:
+                template = template[0]
+            if isinstance(template, str):
+                return template
+        return None
+
     def _is_api_gateway_log_group(self, log_group_name):
         """Check if this SubscriptionFilter is for an API Gateway log group."""
         if log_group_name is None:
@@ -22,14 +39,16 @@ class ApiGatewaySubscriptionFilter(BaseResourceCheck):
         return log_group_name.startswith('/aws/http-api/') or log_group_name.startswith('/aws/api-gateway/')
 
     def scan_resource_conf(self, conf):
-        log_group_name = self._get_property(conf, 'LogGroupName')
-        
+        # A LogGroupName that can't be resolved (e.g. `!Ref MyLogGroup`) is treated
+        # as not being an API Gateway log group, rather than crashing the check.
+        log_group_name = self._as_string(self._get_property(conf, 'LogGroupName'))
+
         # Only check SubscriptionFilters for API Gateway log groups
         if not self._is_api_gateway_log_group(log_group_name):
             return CheckResult.UNKNOWN
-        
+
         # Check FilterName starts with S3-api-gateway-logs-
-        filter_name = self._get_property(conf, 'FilterName')
+        filter_name = self._as_string(self._get_property(conf, 'FilterName'))
         if not filter_name or not filter_name.startswith('S3-api-gateway-logs-'):
             self.failure_reason = "FilterName should start with 'S3-api-gateway-logs-'"
             return CheckResult.FAILED
